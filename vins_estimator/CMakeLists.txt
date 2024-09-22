@@ -15,7 +15,11 @@ find_package(catkin REQUIRED COMPONENTS
     tf
     cv_bridge
     camera_models
-    image_transport)
+    image_transport
+    geographic_msgs
+    sensor_msgs
+    geodesy
+    )
 
 find_package(OpenCV REQUIRED)
 

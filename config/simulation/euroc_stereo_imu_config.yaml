@@ -5,9 +5,11 @@
 imu: 1
 num_of_cam: 2
 
-imu_topic: "/imu_stereo"
-image0_topic: "/gi/forward/left/image_raw"
-image1_topic: "/gi/forward/right/image_raw"
+imu_topic: "/iris/imu_stereo"
+image0_topic: "/gi/downward/left/image_raw"
+image1_topic: "/gi/downward/right/image_raw"
+# image0_topic: "/gi/forward/left/image_raw"
+# image1_topic: "/gi/forward/right/image_raw"
 output_path: "/home/gi/output/"
 
 cam0_calib: "cam0_pinhole_p1.yaml"
@@ -20,25 +22,45 @@ image_height: 480
 estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
                         # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
 
+# forward
+# body_T_cam0: !!opencv-matrix
+#    rows: 4
+#    cols: 4
+#    dt: d
+#    data:  [0, 0, 1, 0,
+#            -1, 0, 0, 0.12,
+#            0, -1, 0, -0.3,
+#            0, 0, 0, 1.]
+
+
+# body_T_cam1: !!opencv-matrix
+#    rows: 4
+#    cols: 4
+#    dt: d
+#    data:  [0, 0, 1, 0,
+#            -1, 0, 0, 0,
+#            0, -1, 0, -0.3,
+#            0, 0, 0, 1.]
+##
+
+#downward
 body_T_cam0: !!opencv-matrix
    rows: 4
    cols: 4
    dt: d
-   data:  [0, 0, 1, 0,
+   data:  [0, -1, 0, 0,
            -1, 0, 0, 0.12,
-           0, -1, 0, -0.3,
+           0, 0, -1, -0.6,
            0, 0, 0, 1.]
-
 
 body_T_cam1: !!opencv-matrix
    rows: 4
    cols: 4
    dt: d
-   data:  [0, 0, 1, 0,
+   data:  [0, -1, 0, 0,
            -1, 0, 0, 0,
-           0, -1, 0, -0.3,
+           0, 0, -1, -0.6,
            0, 0, 0, 1.]
-
 
 #Multiple thread support
 multiple_thread: 1
@@ -70,4 +92,4 @@ td: 0.0                             # initial value of time offset. unit: s. rea
 #loop closure parameters
 load_previous_pose_graph: 0        # load and reuse previous pose graph; load from 'pose_graph_save_path'
 pose_graph_save_path: "~/output/pose_graph/" # save and load path
-save_image: 1                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
+save_image: 0                   # save image in pose graph for visualization prupose; you can close this function by setting 0 

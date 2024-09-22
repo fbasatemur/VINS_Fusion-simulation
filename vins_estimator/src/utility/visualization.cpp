@@ -9,6 +9,10 @@
 
 #include "visualization.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <sensor_msgs/NavSatFix.h>
+#include <geographic_msgs/GeoPoint.h>
+#include <geodesy/utm.h>
+
 using namespace ros;
 using namespace Eigen;
 ros::Publisher pub_odometry, pub_latest_odometry;
@@ -18,19 +22,60 @@ ros::Publisher pub_point_cloud, pub_margin_cloud;
 ros::Publisher pub_key_poses;
 ros::Publisher pub_camera_pose;
 ros::Publisher pub_camera_pose_visual;
-nav_msgs::Path path;
+nav_msgs::Path path, gps_path;
 
 ros::Publisher pub_keyframe_pose;
 ros::Publisher pub_keyframe_point;
 ros::Publisher pub_extrinsic;
 
 ros::Publisher pub_image_track;
+// ros::Subscriber gps_sub;
 
 CameraPoseVisualization cameraposevisual(1, 0, 0, 1);
 static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
 
 size_t pub_counter = 0;
+ros::Publisher gps_pose_pub;
+ros::Publisher gps_path_pub;
+
+
+// void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
+// {
+//     // Convert latitude and longitude to UTM coordinates
+//     geographic_msgs::GeoPoint geo_point;
+//     geo_point.latitude = msg->latitude;
+//     geo_point.longitude = msg->longitude;
+//     geo_point.altitude = msg->altitude;
+//     std::cout << "GPS gelen: " << msg->latitude << 
+//     " " << msg->longitude << 
+//     " " << msg->altitude << std::endl;
+//     geodesy::UTMPoint utm_point(geo_point);
+
+//     // Create a PoseStamped message
+//     geometry_msgs::PoseStamped pose;
+//     pose.header.stamp = ros::Time::now();
+//     pose.header.frame_id = "world";  // Adjust this frame if needed
+//     pose.pose.position.x = utm_point.easting;
+//     pose.pose.position.y = utm_point.northing;
+//     pose.pose.position.z = msg->altitude;
+
+//     pose.pose.orientation.x = 0.0;
+//     pose.pose.orientation.y = 0.0;
+//     pose.pose.orientation.z = 0.0;
+//     pose.pose.orientation.w = 1.0;
+
+//     // Publish the pose
+//     gps_pose_pub.publish(pose);
+
+//     // Add the pose to the path
+//     gps_path.header.stamp = ros::Time::now();
+//     gps_path.header.frame_id = "world";
+//     gps_path.poses.push_back(pose);
+
+//     // Publish the gps_path
+//     gps_path_pub.publish(gps_path);
+// }
 
 void registerPub(ros::NodeHandle &n)
 {
@@ -48,6 +93,12 @@ void registerPub(ros::NodeHandle &n)
     pub_image_track = n.advertise<sensor_msgs::Image>("image_track", 1000);
     px4_publisher = n.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose",1000);
     vision_frame_publisher = n.advertise<geometry_msgs::PoseStamped>("/gaas/vision_pose",1000);
+    
+    // gps_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/gps_pose", 10);
+    // gps_path_pub = n.advertise<nav_msgs::Path>("/gps_path", 10);
+
+    // Subscribe to the RTK GPS data (NavSatFix messages)
+    // gps_sub = n.subscribe("/iris/gps_data", 10, gpsCallback);
 
     cameraposevisual.setScale(0.1);
     cameraposevisual.setLineWidth(0.01);
@@ -337,9 +388,6 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
                                     correct_t(1),
                                     correct_t(2)));
     q.setW(correct_q.w());
-    q.setX(correct_q.x());
-    q.setY(correct_q.y());
-    q.setZ(correct_q.z());
     transform.setRotation(q);
     br.sendTransform(tf::StampedTransform(transform, header.stamp, "world", "body"));
 
